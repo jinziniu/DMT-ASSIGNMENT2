@@ -1,0 +1,9 @@
+# 忽略大数据集文件
+training_set_VU_DM.csv
+test_set_VU_DM.csv
+submission_sample.csv
+
+# 如果你用的是 PyCharm，忽略它的配置文件
+.idea/
+__pycache__/
+*.pyc
