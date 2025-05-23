@@ -91,6 +91,16 @@ hold_ndcg = evaluate_ndcg(hold, gbm)
 print(f"Validation NDCG@1/3/5: {val_ndcg}")
 print(f"Hold-out   NDCG@1/3/5: {hold_ndcg}")
 
+# 8.5 分组 NDCG（Bias 检测）
+def group_ndcg(dataset, model, k=5):
+    mask_fam = dataset['srch_children_count'] > 0
+    ndcg_fam = evaluate_ndcg(dataset[mask_fam], model)[k]
+    ndcg_bus = evaluate_ndcg(dataset[~mask_fam], model)[k]
+    return {'family': ndcg_fam, 'business': ndcg_bus}
+
+baseline = group_ndcg(val, gbm, k=5)
+print(f"Baseline group NDCG@5: {baseline}, Gap (family-business): {baseline['family'] - baseline['business']:.4f}")
+
 # 9. 输出并可视化特征重要性 Top10
 imp = pd.DataFrame({'feature': features, 'gain': gbm.feature_importance('gain')})
 imp = imp.sort_values('gain', ascending=False).head(10)
