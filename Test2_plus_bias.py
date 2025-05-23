@@ -22,13 +22,14 @@ print("\n== Missing rate of each field ==")
 print(missing)
 
 # 4) 数值特征分布（Univariate）
+#方法1：去极值
 p99 = train['price_usd'].quantile(0.99)
 data = train[train['price_usd'] <= p99]['price_usd']
 plt.hist(data, bins=50)
 plt.title('price_usd (<=99th percentile)')
 plt.show()
 
-
+#方法二：对数转换
 plt.hist(np.log1p(train['price_usd']), bins=50)
 plt.title('log1p(price_usd) distribution')
 plt.xlabel('log1p(price_usd)')
