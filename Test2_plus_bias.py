@@ -22,8 +22,20 @@ print("\n== Missing rate of each field ==")
 print(missing)
 
 # 4) 数值特征分布（Univariate）
+p99 = train['price_usd'].quantile(0.99)
+data = train[train['price_usd'] <= p99]['price_usd']
+plt.hist(data, bins=50)
+plt.title('price_usd (<=99th percentile)')
+plt.show()
+
+
+plt.hist(np.log1p(train['price_usd']), bins=50)
+plt.title('log1p(price_usd) distribution')
+plt.xlabel('log1p(price_usd)')
+plt.show()
+
 numeric_cols = [
-    'price_usd', 'prop_review_score', 'prop_location_score1',
+     'prop_review_score', 'prop_location_score1',
     'visitor_hist_adr_usd', 'orig_destination_distance'
 ]
 for col in numeric_cols:
