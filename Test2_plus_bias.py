@@ -21,6 +21,46 @@ missing = train.isnull().mean().sort_values(ascending=False)
 print("\n== Missing rate of each field ==")
 print(missing)
 
+
+train.columns = train.columns.str.strip()
+p99_price = train['price_usd'].quantile(0.99)
+data = train[train['price_usd'] <= p99_price].copy()
+
+# 2) 等宽分箱
+data['price_bin'] = pd.cut(data['price_usd'], bins=20)
+
+# 3) 分组聚合
+stats = (data
+         .groupby('price_bin')
+         .agg(avg_price      = ('price_usd',    'mean'),
+              total_clicks   = ('click_bool',   'sum'),
+              total_bookings = ('booking_bool', 'sum'))
+         .reset_index())
+
+# 4) 计算转化率（除零转 NaN）
+stats['booking_rate'] = stats['total_bookings'] / stats['total_clicks'].replace(0, np.nan)
+
+# 5) 按 avg_price 排序，双轴可视化
+stats = stats.sort_values('avg_price')
+fig, ax1 = plt.subplots(figsize=(8, 5))
+ax2 = ax1.twinx()
+
+ax1.plot(stats['avg_price'], stats['booking_rate'], marker='o', label='Booking Rate')
+ax2.plot(stats['avg_price'], stats['avg_price'],   marker='s', label='Avg Price')
+
+ax1.set_xlabel('Average Price (USD)')
+ax1.set_ylabel('Booking Rate')
+ax2.set_ylabel('Average Price (USD)')
+
+lines = ax1.get_lines() + ax2.get_lines()
+labels = [ln.get_label() for ln in lines]
+ax1.legend(lines, labels, loc='upper right')
+
+plt.title('Booking Rate vs. Price (Outliers Removed)')
+plt.tight_layout()
+plt.show()
+
+
 # 4) 数值特征分布（Univariate）
 #方法1：去极值
 p99 = train['price_usd'].quantile(0.99)

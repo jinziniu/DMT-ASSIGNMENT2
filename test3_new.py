@@ -1,9 +1,11 @@
-
+import matplotlib
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import GroupShuffleSplit
+matplotlib.use('TkAgg')
 
+import matplotlib.pyplot as plt
 
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     # （1）丢弃训练/预测时不能用的泄漏列
@@ -50,10 +52,30 @@ def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     if 'prop_review_score' in df.columns:
         df['review_rank'] = grp['prop_review_score'].rank(ascending=False, method='dense')
 
+    #price_rank 分布
+    plt.figure(figsize=(8, 5))
+    plt.hist(df['price_rank'].dropna(), bins=50)
+    plt.xlabel('Price Rank')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Price Rank')
+    plt.tight_layout()
+    plt.show()
+
+
+
     # 5. 交互特征
     df['loc_stay_inter'] = df['prop_location_score1'] * df['srch_length_of_stay']
     if 'visitor_hist_adr_usd' in df.columns:
         df['hist_ratio'] = df['price_usd'] / (df['visitor_hist_adr_usd'] + 1e-6)
+
+    # 2) Hist Ratio distribution
+    plt.figure(figsize=(8, 5))
+    plt.hist(df['hist_ratio'].dropna(), bins=50)
+    plt.xlabel('Hist Ratio (price_usd / visitor_hist_adr_usd)')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Hist Ratio')
+    plt.tight_layout()
+    plt.show()
 
     # 6. 时间特征
     df['date_time'] = pd.to_datetime(df['date_time'])
