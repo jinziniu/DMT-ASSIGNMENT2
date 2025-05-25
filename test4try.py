@@ -28,16 +28,17 @@ if missing:
     raise KeyError(f"缺失以下 test 特征: {missing}")
 
 # 4. 计算样本权重（Re-weighting）
-is_family_train = train['srch_children_count'] > 0
-p_fam = is_family_train.mean()
-weights = np.where(is_family_train, 1.0 / p_fam, 1.0)
+is_nonfam_train = train['srch_children_count'] == 0
+p_non = is_nonfam_train.mean()
+weights = np.where(is_nonfam_train, 1.0 / p_non, 1.0)
 # 归一化：保证平均权重为 1
 weights = weights / np.mean(weights)
 # Clip：避免过大或过小
 weights = np.clip(weights, 0.5, 2.0)
 # 对验证集也做同样的加权
-is_family_val = val['srch_children_count'] > 0
-val_weights = np.where(is_family_val, 1.0 / p_fam, 1.0)
+is_nonfam_val = val['srch_children_count'] == 0
+val_p_non = is_nonfam_val.mean()
+val_weights = np.where(is_nonfam_val, 1.0 / val_p_non, 1.0)
 val_weights = val_weights / np.mean(val_weights)
 val_weights = np.clip(val_weights, 0.5, 2.0)
 
@@ -48,7 +49,9 @@ lgb_train = lgb.Dataset(train[features],
                         label=train['relevance'],
                         group=train_group,
                         weight=weights)
-lgb_val   = lgb.Dataset(val[features],   label=val['relevance'],   group=val_group, reference=lgb_train)
+lgb_val   = lgb.Dataset(val[features],   label=val['relevance'],
+                        group=val_group,weight=val_weights,
+                        reference=lgb_train)
 
 # 5. LightGBM 参数
 params = {
